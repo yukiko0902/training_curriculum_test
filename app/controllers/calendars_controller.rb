@@ -2,7 +2,7 @@ class CalendarsController < ApplicationController
 
   # １週間のカレンダーと予定が表示されるページ
   def index
-    get_week  # 命名規則修正
+    get_week  
     @plan = Plan.new
   end
 
@@ -15,10 +15,10 @@ class CalendarsController < ApplicationController
   private
 
   def plan_params
-    params.require(:calendars).permit(:date, :plan)
+    params.require(:plan).permit(:date, :plan)
   end
 
-  def get_week  # 命名規則修正
+  def get_week
     wdays = ['(日)','(月)','(火)','(水)','(木)','(金)','(土)']
 
     # Dateオブジェクトは、日付を保持しています。下記のように`.today.day`とすると、今日の日付を取得できます。
@@ -26,17 +26,25 @@ class CalendarsController < ApplicationController
     # 例)　今日が2月1日の場合・・・ Date.today.day => 1日
 
     @week_days = []
+    #配列を作る
 
     plans = Plan.where(date: @todays_date..@todays_date + 6)
+    #Planはモデル名    dateカラムの @todays_date（今日）..（～） @todays_date + 6(今日⁺6日間)
 
-    7.times do |x|
+    7.times do |x|  
       today_plans = []
-      plans.each do |plan|
-        today_plans.push(plan.plan) if plan.date == @todays_date + x
+      plans.each do |plan| #さっき定義した↑plansを順に表示
+        today_plans.push(plan.plan) if plan.date == @todays_date + x #ifを先に読む xはtimesのぶっろく変数
+        #配列にpush ①ブロック変数のプラン ②プランモデルのプランカラム
       end
-      days = { month: (@todays_date + x).month, date: (@todays_date+x).day, plans: today_plans} #シンボル型に修正
+
+      wday_num = Date.today.wday + x   #繰り返す度にｘを足す
+      if wday_num >= 7  
+        wday_num = wday_num -7
+      end
+
+      days = { month: (@todays_date + x).month, date: (@todays_date + x).day, plans: today_plans, wdays:wdays[wday_num]}
       @week_days.push(days)
     end
-
   end
 end
